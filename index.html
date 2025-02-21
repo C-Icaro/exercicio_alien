@@ -24,7 +24,7 @@
                 default: 'arcade',
                 arcade:{
                     gravity:{y:300},
-                    debug: true
+                    debug: false
                 }
             },
             scene: {
@@ -41,13 +41,14 @@
         var teclado;//Guardará as teclas de interação
         var fogo;//Guardará o efeito de turbo
         var plataforma;//Guardará um objeto de colisão com o alien
-        var moeda;//Guardará a pontuação do jogo
+        var moedas = [];//Guardará as moedas do jogo
+        var numMoedas = 1;//Informará a quantidade de moedas na tela
+        var placarMoedas; //Gardará o texto da quantidade de moedas
         var pontuacao = 0;//Guardará a quantidade de itens coletados
         var placar;//Guardará o texto a ser exibido
         var nuvem;//Guardará o objeto de colisão "nuvem"
         var chuva; 
-
-
+        
         function preload() {
             this.load.image('background', 'assets/bg.png');
             this.load.image('player', 'assets/alienigena.png');
@@ -56,7 +57,6 @@
             this.load.image('moeda', 'assets/moeda.png');
             this.load.image('nuvem', 'assets/nuvem.png');
             this.load.image('chuva', 'assets/chuva.png');
-            
         }
 
         function create() {
@@ -81,24 +81,19 @@
             this.physics.add.collider(alien, plataforma);
 
             //Adicionando a moeda e sua colisão:
-            moeda = this.physics.add.sprite(larguraJogo/2, 0, 'moeda');
-            moeda.setCollideWorldBounds(true);
-            moeda.setBounce(0.7);
-            this.physics.add.collider(moeda, plataforma);
+            for(var i = 0; i < 1; i++){
+                var moeda = this.physics.add.sprite(Phaser.Math.RND.between(50, larguraJogo - 50), Phaser.Math.RND.between(50, alturaJogo - 50), 'moeda');
+                moeda.setCollideWorldBounds(true);
+                moeda.setBounce(0.7);
+                this.physics.add.collider(moeda, plataforma);
+                this.physics.add.overlap(alien, moeda, coletarMoeda, null, this);
+                moedas.push(moeda);
+            }
 
-            //Adicionando placar:
-            placar = this.add.text(50, 50, 'Pontuação:' + pontuacao, {fontSize:'45px', fill:'#495613'});
+            //Adicionando placar e contador de moedas:
+            placar = this.add.text(50, 50, 'Pontuação: ' + pontuacao, {fontSize:'45px', fill:'#495613'});
+            placarMoedas = this.add.text(50, 100, 'Moedas na tela: ' + numMoedas, {fontSize:'45px', fill:'#495613'});
             
-            //Adicionando randomização do objeto de pontuação e interação com o personagem:
-            this.physics.add.overlap(alien, moeda, function(){//Função Overlap é de sobreposição: overlap(objeto1, objeto2, function(){ acontecimento }
-                moeda.setVisible(false);
-                var posicaoMoeda_Y =   Phaser.Math.RND.between(50, 650);//Math.rnd.between adiciona randomização entre o intervalo dado
-                moeda.setPosition(posicaoMoeda_Y, 100);
-                pontuacao +=1;
-                placar.setText('Pontuação:' + pontuacao);
-                moeda.setVisible(true);
-            });
-
             //Adicionando efeito chuva:
             chuva = this.add.sprite(630, 400, 'chuva').setScale(0.4);
             chuva.setVisible(false);
@@ -106,26 +101,21 @@
             //Adicionanto a nuvem e suas colisões:
             nuvem = this.physics.add.staticImage(630, 237, 'nuvem');
             this.physics.add.collider(alien, nuvem, () => {
-            console.log("Colisão detectada!");
-            chuva.setVisible(true);
+                chuva.setVisible(true);
             });
             this.physics.add.collider(moeda, nuvem, () => {
-            console.log("Colisão detectada!");
-            chuva.setVisible(true);
+                chuva.setVisible(true);
             });
-
-            //Adicionando interação alien + nuvem:
-   
-           
         }
+
         function update() {
             //Movimentação para a esquerda
             if(teclado.left.isDown){
-                alien.setVelocityX(-150);
+                alien.setVelocityX(-170);
             }
             //Movimentação para a direita
             else if (teclado.right.isDown){
-                alien.setVelocityX(150);
+                alien.setVelocityX(170);
             }
             //Sem movimento em X
             else{
@@ -134,23 +124,45 @@
 
             //Movimentação para cima
             if(teclado.up.isDown){
-                alien.setVelocityY(-150);
+                alien.setVelocityY(-200);
                 ativarTurbo();
             }
-            else{ semTurbo(); }//Ação da gravidade
+            else{ 
+                semTurbo(); 
+            }
 
+            //Ação da gravidade
             fogo.setPosition(alien.x, alien.y + alien.height/2);//Seta a posição do fogo logo abaixo do alien 
+
+            if(pontuacao % 10 === 0 && pontuacao != 0){//Caso a pontuação seja um multiplo de 1 é adicionado mais uma moeda na tela
+                var novaMoeda = this.physics.add.sprite(Phaser.Math.RND.between(50, larguraJogo - 50), Phaser.Math.RND.between(50, alturaJogo - 50), 'moeda');
+                novaMoeda.setCollideWorldBounds(true);
+                novaMoeda.setBounce(0.7);
+                this.physics.add.collider(novaMoeda, plataforma);//Adiciona a colisão da nova moeda
+                this.physics.add.overlap(alien, novaMoeda, coletarMoeda, null, this);//Adiciona a colisão da nova moeda com o alien
+                moedas.push(novaMoeda);
+                console.log("Mais uma moeda adicionada.");
+                numMoedas++;
+                placarMoedas.setText('Moedas na tela: ' + numMoedas);
+                pontuacao++; // Incrementa a pontuação para evitar adicionar moedas infinitamente
+            }
+        }
+
+        function coletarMoeda(alien, moeda) {//Função para coletar e randomizar a posição da moeda
+            moeda.setVisible(false);
+            moeda.setPosition(Phaser.Math.RND.between(50, larguraJogo - 50), Phaser.Math.RND.between(50, alturaJogo - 50));
+            moeda.setVisible(true);
+            pontuacao += 1;
+            placar.setText('Pontuação: ' + pontuacao);
             
         }
 
         function ativarTurbo(){
-            fogo.setVisible(true);//Mostra o "Tubo"
+            fogo.setVisible(true);//Mostra o "Modo turbo"
         }
         function semTurbo(){
-            fogo.setVisible(false);//Esconde o "Turbo"
+            fogo.setVisible(false);//Esconde o "Modo turbo"
         }
-
-          
     </script>
 </body>
 </html>
