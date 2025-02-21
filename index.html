@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exercício do Alien</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+    <style> body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; } </style>
+</head>
+
+<body>
+    <script>
+        // Definindo as dimensões do jogo phase
+        const larguraJogo = 700;
+        const alturaJogo = 850;
+
+        // Definindo as configurações básicas do jogo e cenas
+        const config = {
+            type: Phaser.AUTO,
+            width: larguraJogo,
+            height: alturaJogo,
+
+            physics:{
+                default: 'arcade',
+                arcade:{
+                    gravity:{y:300},
+                    debug: true
+                }
+            },
+            scene: {
+                preload: preload,
+                create: create,
+                update: update
+            }
+        };
+
+        // Criando o jogo Phaser
+        const game = new Phaser.Game(config);
+
+        var alien;//Guardará o personagem
+        var teclado;//Guardará as teclas de interação
+        var fogo;//Guardará o efeito de turbo
+        var plataforma;//Guardará um objeto de colisão com o alien
+        var moeda;//Guardará a pontuação do jogo
+        var pontuacao = 0;//Guardará a quantidade de itens coletados
+        var placar;//Guardará o texto a ser exibido
+        var nuvem;//Guardará o objeto de colisão "nuvem"
+        var chuva; 
+
+
+        function preload() {
+            this.load.image('background', 'assets/bg.png');
+            this.load.image('player', 'assets/alienigena.png');
+            this.load.image('turbo_nave', 'assets/turbo.png');
+            this.load.image('plataforma_tijolo', 'assets/tijolos.png')
+            this.load.image('moeda', 'assets/moeda.png');
+            this.load.image('nuvem', 'assets/nuvem.png');
+            this.load.image('chuva', 'assets/chuva.png');
+            
+        }
+
+        function create() {
+            // Posiciona o sprite do background tendo como referência a largura e altura do jogo
+            this.add.image(larguraJogo/2, alturaJogo/2, 'background');
+
+            //Adicionando efeito turbo:
+            fogo = this.add.sprite(0, 0, 'turbo_nave');
+            fogo.setVisible(false);
+            
+            //Criando o alien:
+            alien = this.physics.add.sprite(larguraJogo/2, 0, 'player');
+            alien.setCollideWorldBounds(true);
+
+            //Adicionando teclas do teclado:
+            teclado = this.input.keyboard.createCursorKeys();
+
+            //Adiocionando a plataforma:
+            plataforma = this.physics.add.staticImage(larguraJogo/2, alturaJogo/2, 'plataforma_tijolo');
+
+            //Adicionando colisão entre plataforma e alien:
+            this.physics.add.collider(alien, plataforma);
+
+            //Adicionando a moeda e sua colisão:
+            moeda = this.physics.add.sprite(larguraJogo/2, 0, 'moeda');
+            moeda.setCollideWorldBounds(true);
+            moeda.setBounce(0.7);
+            this.physics.add.collider(moeda, plataforma);
+
+            //Adicionando placar:
+            placar = this.add.text(50, 50, 'Pontuação:' + pontuacao, {fontSize:'45px', fill:'#495613'});
+            
+            //Adicionando randomização do objeto de pontuação e interação com o personagem:
+            this.physics.add.overlap(alien, moeda, function(){//Função Overlap é de sobreposição: overlap(objeto1, objeto2, function(){ acontecimento }
+                moeda.setVisible(false);
+                var posicaoMoeda_Y =   Phaser.Math.RND.between(50, 650);//Math.rnd.between adiciona randomização entre o intervalo dado
+                moeda.setPosition(posicaoMoeda_Y, 100);
+                pontuacao +=1;
+                placar.setText('Pontuação:' + pontuacao);
+                moeda.setVisible(true);
+            });
+
+            //Adicionando efeito chuva:
+            chuva = this.add.sprite(630, 400, 'chuva').setScale(0.4);
+            chuva.setVisible(false);
+            
+            //Adicionanto a nuvem e suas colisões:
+            nuvem = this.physics.add.staticImage(630, 237, 'nuvem');
+            this.physics.add.collider(alien, nuvem, () => {
+            console.log("Colisão detectada!");
+            chuva.setVisible(true);
+            });
+            this.physics.add.collider(moeda, nuvem, () => {
+            console.log("Colisão detectada!");
+            chuva.setVisible(true);
+            });
+
+            //Adicionando interação alien + nuvem:
+   
+           
+        }
+        function update() {
+            //Movimentação para a esquerda
+            if(teclado.left.isDown){
+                alien.setVelocityX(-150);
+            }
+            //Movimentação para a direita
+            else if (teclado.right.isDown){
+                alien.setVelocityX(150);
+            }
+            //Sem movimento em X
+            else{
+                alien.setVelocityX(0);
+            }
+
+            //Movimentação para cima
+            if(teclado.up.isDown){
+                alien.setVelocityY(-150);
+                ativarTurbo();
+            }
+            else{ semTurbo(); }//Ação da gravidade
+
+            fogo.setPosition(alien.x, alien.y + alien.height/2);//Seta a posição do fogo logo abaixo do alien 
+            
+        }
+
+        function ativarTurbo(){
+            fogo.setVisible(true);//Mostra o "Tubo"
+        }
+        function semTurbo(){
+            fogo.setVisible(false);//Esconde o "Turbo"
+        }
+
+          
+    </script>
+</body>
+</html>
