@@ -78,23 +78,25 @@
             alien = this.physics.add.sprite(larguraJogo/2, 0, 'player');
             alien.setCollideWorldBounds(true);
 
-            //Adicionando capacidade de ser arrastado
+
+            //Adicionando responsividade com android
+            if(game.device.os.android){
+
+                //Adicionando capacidade de ser arrastado
             alien.setInteractive({ draggable: true });
 
-             //  The pointer has to move this distance before it's considered as a drag
+            //  The pointer has to move this distance before it's considered as a drag
             this.input.dragDistanceThreshold = 8;
 
             let dragDirection = null;
 
             this.input.on('dragstart', () => {
 
-                 dragDirection = null;
+                dragDirection = null;
 
             });
 
-            this.input.on('drag', (pointer, gameObject, dragX, dragY) =>
-            {
-
+            this.input.on('drag', (pointer, gameObject, dragX, dragY) =>{
                 gameObject.x = dragX;
                 gameObject.y = dragY;
 
@@ -105,12 +107,9 @@
                 dragDirection = null;
 
             });
-
             
-            if(game.device.os.android){
                 console.log("Usuário está em um dispositivo android.");
                 this.background.setTint(0xff00ff);
-                
             }
 
 
