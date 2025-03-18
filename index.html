@@ -20,6 +20,11 @@
             width: larguraJogo,
             height: alturaJogo,
 
+            scale: {
+                mode: Phaser.Scale.FIT,
+                autoCenter: Phaser.Scale.CENTER_BOTH
+            },
+
             physics:{
                 default: 'arcade',
                 arcade:{
@@ -60,8 +65,10 @@
         }
 
         function create() {
+
             // Posiciona o sprite do background tendo como referência a largura e altura do jogo
             this.add.image(larguraJogo/2, alturaJogo/2, 'background');
+            
 
             //Adicionando efeito turbo:
             fogo = this.add.sprite(0, 0, 'turbo_nave');
@@ -70,6 +77,35 @@
             //Criando o alien:
             alien = this.physics.add.sprite(larguraJogo/2, 0, 'player');
             alien.setCollideWorldBounds(true);
+
+            //Adicionando capacidade de ser arrastado
+            alien.setInteractive({ draggable: true });
+
+             //  The pointer has to move this distance before it's considered as a drag
+            this.input.dragDistanceThreshold = 8;
+
+            let dragDirection = null;
+
+            this.input.on('dragstart', () => {
+
+                 dragDirection = null;
+
+            });
+
+            this.input.on('drag', (pointer, gameObject, dragX, dragY) =>
+            {
+
+                gameObject.x = dragX;
+                gameObject.y = dragY;
+
+            });
+
+            this.input.on('dragend', () => {
+
+                dragDirection = null;
+
+            });
+
 
             //Adicionando teclas do teclado:
             teclado = this.input.keyboard.createCursorKeys();
