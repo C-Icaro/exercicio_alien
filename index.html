@@ -67,7 +67,7 @@
         function create() {
 
             // Posiciona o sprite do background tendo como referência a largura e altura do jogo
-            this.add.image(larguraJogo/2, alturaJogo/2, 'background');
+            this.background = this.add.image(larguraJogo/2, alturaJogo/2, 'background');
             
 
             //Adicionando efeito turbo:
@@ -105,6 +105,13 @@
                 dragDirection = null;
 
             });
+
+            
+            if(game.device.os.android){
+                console.log("Usuário está em um dispositivo android.");
+                this.background.setTint(0xff00ff);
+                
+            }
 
 
             //Adicionando teclas do teclado:
